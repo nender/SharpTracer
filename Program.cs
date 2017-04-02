@@ -24,13 +24,6 @@ namespace RayTracer
         
         static Random rand = new Random();
         
-        static Vec3 randomInUnitSphere() {
-            Vec3 p;
-            do {
-                p = 2 * new Vec3(rand.NextDouble(), rand.NextDouble(), rand.NextDouble()) - new Vec3(1, 1, 1);
-            } while (p.Dot(p) >= 1);
-            return p;
-        }   
         
         static void Main(string[] args)
         {
@@ -49,12 +42,16 @@ namespace RayTracer
                 new Sphere(new Vec3(-1,0,-1), 0.5, new Refractive(1.8)),
             };
             
-            var cam = new Camera (
-                lookFrom: new Vec3(-2,2,1),
-                lookAt: new Vec3(0,0,-1),
+            var lookFrom = new Vec3(3,3,2);
+            var lookAt =  new Vec3(0,0,-1);
+            var cam = new Camera(
+                lookFrom,
+                lookAt,
                 viewUp: new Vec3(0,1,0),
-                verticalFOV: 30,
-                aspect: (double) width / height
+                verticalFOV: 20,
+                aspect: (double) width / height,
+                aperture: 0.5,
+                focusDist: (lookFrom - lookAt).Length()
             );
             
             for (int j = 0; j < height; j++) {
