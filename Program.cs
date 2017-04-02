@@ -34,9 +34,9 @@ namespace RayTracer
         
         static void Main(string[] args)
         {
-            int width = 1920;
-            int height = 1080;
-            int samples = 1000;
+            int width = 400;
+            int height = 200;
+            int samples = 100;
             
             Console.WriteLine("P3");
             Console.WriteLine($"{width} {height}");
@@ -49,7 +49,13 @@ namespace RayTracer
                 new Sphere(new Vec3(-1,0,-1), 0.5, new Refractive(1.8)),
             };
             
-            var cam = new Camera();
+            var cam = new Camera (
+                lookFrom: new Vec3(-2,2,1),
+                lookAt: new Vec3(0,0,-1),
+                viewUp: new Vec3(0,1,0),
+                verticalFOV: 30,
+                aspect: (double) width / height
+            );
             
             for (int j = 0; j < height; j++) {
                 for (int i = 0; i < width; i++) {
