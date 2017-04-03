@@ -10,9 +10,7 @@ namespace RayTracer
             Z = z;
         }
         
-        public double X { get; }
-        public double Y { get; }
-        public double Z { get; }
+        public readonly double X, Y, Z;
         public double R => X;
         public double G => Y;
         public double B => Z;

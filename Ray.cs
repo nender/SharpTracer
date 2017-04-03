@@ -2,15 +2,13 @@ namespace RayTracer {
     class Ray
     {
         public Ray(Vec3 a, Vec3 b) {
-            A = a;
-            B = b;
+            Origin = a;
+            Direction = b;
         }
         
-        public Vec3 Origin => A;
-        public Vec3 Direction => B;
+        public readonly Vec3 Origin, Direction;
+
         public Vec3 PointAtParameter(double t)
-            => A + t * B;
-        
-        Vec3 A, B;
+            => Origin + t * Direction;
     }
 }
