@@ -1,4 +1,4 @@
-using System;
+using static RayTracer.StaticRandom;
 
 namespace RayTracer
 {
@@ -30,12 +30,11 @@ namespace RayTracer
         Vec3 randomInUnitSphere() {
             Vec3 p;
             do {
-                p = 2 * new Vec3(rand.NextDouble(), rand.NextDouble(), rand.NextDouble()) - new Vec3(1, 1, 1);
+                p = 2 * new Vec3(DRand(), DRand(), DRand()) - new Vec3(1, 1, 1);
             } while (p.Dot(p) >= 1);
             return p;
         }   
         
-        readonly Random rand = new Random();
         readonly Vec3 Albedo;
         readonly double Fuzziness;
     }

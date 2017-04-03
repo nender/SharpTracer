@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using static RayTracer.StaticRandom;
 
 namespace RayTracer
 {
@@ -22,16 +25,16 @@ namespace RayTracer
             }
         }
         
-        static IHitable randomScene()
+        static IHitable RandomScene()
         {
             double rndSqrd()
-                => rand.NextDouble() * rand.NextDouble();
+                => DRand() * DRand();
             
             Vec3 metalVec()
                 => new Vec3(
-                    0.5*(1 + rand.NextDouble()),
-                    0.5*(1 + rand.NextDouble()),
-                    0.5*(1 + rand.NextDouble())
+                    0.5*(1 + DRand()),
+                    0.5*(1 + DRand()),
+                    0.5*(1 + DRand())
                 );
                 
             var world = new HitableList()
@@ -41,13 +44,13 @@ namespace RayTracer
             
             for (int a = -11; a < 11; a++) {
                 for (int b = -11; b < 11; b++) {
-                    var chooseMat = rand.NextDouble();
-                    var center = new Vec3(a+0.9*rand.NextDouble(), 0.2, b+0.9*rand.NextDouble());
+                    var chooseMat = DRand();
+                    var center = new Vec3(a+0.9*DRand(), 0.2, b+0.9*DRand());
                     if ((center - new Vec3(4, 0.2, 0)).Length() > 0.9) {
                         if (chooseMat < 0.8) {
                             world.Add(new Sphere(center, 0.2, new Lambertian(rndSqrd(), rndSqrd(), rndSqrd())));
                         } else if (chooseMat < 0.95) {
-                            world.Add(new Sphere(center, 0.2, new Reflective(metalVec(), rand.NextDouble())));
+                            world.Add(new Sphere(center, 0.2, new Reflective(metalVec(), DRand())));
                         } else {
                             world.Add(new Sphere(center, 0.2, new Refractive(1.5)));
                         }
@@ -64,20 +67,51 @@ namespace RayTracer
                     
             return world;
         }
-        
-        static Random rand = new Random();
-        
+
+        static IEnumerable<(int r, int g, int b)> Render(Camera cam, IHitable world, int width, int height, int samples, int start, int end)
+        {
+            for (int j = start; j < end; j++) {
+                for (int i = 0; i < width; i++) {
+                    var col = new Vec3(0, 0, 0);
+                    for (int s = 0; s < samples; s++)
+                    {
+                        var u = (i + DRand()) / width;
+                        var v = ((height - j) + DRand()) / height;
+                        var r = cam.getRay(u, v);
+                        var p = r.PointAtParameter(2);
+                        col += Color(r, world, depth: 0);
+                    }
+
+                    col /= samples;
+                    col = new Vec3(Math.Sqrt(col.X), Math.Sqrt(col.Y), Math.Sqrt(col.Z));
+                    var ir = (int)(255.99 * col.R);
+                    var ig = (int)(255.99 * col.G);
+                    var ib = (int)(255.99 * col.B);
+                    yield return (ir, ig, ib);
+                }
+            }
+        }
+
+        static IEnumerable<(int start, int end)> Partition(int height, int parallelDegree)
+        {
+            if (height % parallelDegree != 0)
+                throw new Exception();
+
+            int stepSize = height / parallelDegree;
+
+            for (int i = 0; i < height; i += stepSize)
+            {
+                yield return (i, i + stepSize - 1);
+            }
+        }
+
         static void Main(string[] args)
         {
-            int width = 1920;
-            int height = 1080;
-            int samples = 500;
-
-            Console.WriteLine("P3");
-            Console.WriteLine($"{width} {height}");
-            Console.WriteLine("255");
+            int width = 400;
+            int height = 200;
+            int samples = 400;
             
-            var world = randomScene();
+            var world = RandomScene();
             
             var lookFrom = new Vec3(13,2,3);
             var lookAt =  new Vec3(0,0,0);
@@ -90,25 +124,24 @@ namespace RayTracer
                 aperture: 0.1,
                 focusDist: 10
             );
-            
-            for (int j = 0; j < height; j++) {
-                for (int i = 0; i < width; i++) {
-                    var col = new Vec3(0, 0, 0);
-                    for (int s = 0; s < samples; s++) {
-                        var u = (i + rand.NextDouble()) / width;
-                        var v = ((height - j) + rand.NextDouble()) / height;
-                        var r = cam.getRay(u, v);
-                        var p = r.PointAtParameter(2);
-                        col += Color(r, world, 0);
-                    }
-                    
-                    col /= samples;
-                    col = new Vec3(Math.Sqrt(col.X), Math.Sqrt(col.Y), Math.Sqrt(col.Z));
-                    var ir = (int) (255.99*col.R);
-                    var ig = (int) (255.99*col.G);
-                    var ib = (int) (255.99*col.B);
-                    Console.WriteLine($"{ir} {ig} {ib}");
-                }
+
+            var cores = Environment.ProcessorCount;
+
+            var parts = Partition(height, cores).ToArray();
+            var colorData =
+                parts.AsParallel()
+                .AsOrdered()
+                .WithMergeOptions(ParallelMergeOptions.FullyBuffered)
+                .Select(x => Render(cam, world, width, height, samples, x.start, x.end))
+                .SelectMany(x => x);
+
+            Console.WriteLine("P3");
+            Console.WriteLine($"{width} {height}");
+            Console.WriteLine("255");
+
+            foreach(var rgb in colorData) {
+                (int r, int g, int b) = rgb;
+                Console.WriteLine($"{r} {g} {b}");
             }
         }
     }

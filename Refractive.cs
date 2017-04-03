@@ -1,4 +1,5 @@
 using System;
+using static RayTracer.StaticRandom;
 
 namespace RayTracer
 {
@@ -32,7 +33,7 @@ namespace RayTracer
                 reflectProbability = 1;
             }
             
-            if (rand.NextDouble() < reflectProbability) {
+            if (DRand() < reflectProbability) {
                 return (new Ray(rec.p, reflected), attenuation);
             } else {
                 return (new Ray(rec.p, maybeRefracted.Value), attenuation);
@@ -40,7 +41,6 @@ namespace RayTracer
         }
         
         readonly static Vec3 attenuation = new Vec3(1,1,1);
-        readonly static Random rand = new Random();
         readonly double RefractionIndex;
         
         static double Schlick(double cosine, double refraction)

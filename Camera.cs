@@ -1,4 +1,5 @@
 using System;
+using static RayTracer.StaticRandom;
 
 namespace RayTracer
 {
@@ -27,12 +28,11 @@ namespace RayTracer
         static Vec3 randomInUnitDisk() {
             Vec3 p;
             do {
-                p = 2 * new Vec3(rand.NextDouble(), rand.NextDouble(), 0) - new Vec3(1, 1, 0);
+                p = 2 * new Vec3(DRand(), DRand(), 0) - new Vec3(1, 1, 0);
             } while (p.Dot(p) >= 1);
             return p;
         }   
         
-        static readonly Random rand = new Random();
         readonly Vec3 origin;
         readonly Vec3 lowerLeftCorner;
         readonly Vec3 horizontal;
