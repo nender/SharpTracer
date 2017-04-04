@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text;
 using static RayTracer.StaticRandom;
 
 namespace RayTracer
@@ -70,7 +73,10 @@ namespace RayTracer
 
         static IEnumerable<(int r, int g, int b)> Render(Camera cam, IHitable world, int width, int height, int samples, int start, int end)
         {
-            for (int j = start; j < end; j++) {
+            var watch = new Stopwatch();
+            watch.Start();
+            var wat = new List<(int, int, int)>();
+            for (int j = start; j <= end; j++) {
                 for (int i = 0; i < width; i++) {
                     var col = new Vec3(0, 0, 0);
                     for (int s = 0; s < samples; s++)
@@ -87,29 +93,40 @@ namespace RayTracer
                     var ir = (int)(255.99 * col.R);
                     var ig = (int)(255.99 * col.G);
                     var ib = (int)(255.99 * col.B);
-                    yield return (ir, ig, ib);
+                    wat.Add((ir, ig, ib));
                 }
             }
+            //Console.WriteLine($"Finished rendering chunk of {wat.Count}px in {watch.ElapsedMilliseconds}ms");
+            return wat;
         }
 
         static IEnumerable<(int start, int end)> Partition(int height, int parallelDegree)
         {
-            if (height % parallelDegree != 0)
-                throw new Exception();
-
-            int stepSize = height / parallelDegree;
-
-            for (int i = 0; i < height; i += stepSize)
-            {
-                yield return (i, i + stepSize - 1);
+            int stepSize = Math.Max(1, height / parallelDegree);
+            int i = 0;
+            while (true) {
+                if (i + stepSize >= height) {
+                    yield return (i, height - 1);
+                    yield break;
+                }
+                else
+                {
+                    yield return (i, i + stepSize - 1);
+                    i += stepSize;
+                }
             }
         }
 
         static void Main(string[] args)
         {
-            int width = 400;
-            int height = 200;
-            int samples = 400;
+            int width = int.Parse(args[0]);
+            int height = int.Parse(args[1]);
+            int samples = int.Parse(args[2]);
+            string fileName = args[3];
+
+            //Console.WriteLine($"{DateTime.Now} Rendering default scene at {width}x{height}px with {samples} samples/px");
+            var watch = new Stopwatch();
+            watch.Start();
             
             var world = RandomScene();
             
@@ -129,19 +146,23 @@ namespace RayTracer
 
             var parts = Partition(height, cores).ToArray();
             var colorData =
-                parts.AsParallel()
+                parts
+                .AsParallel()
                 .AsOrdered()
-                .WithMergeOptions(ParallelMergeOptions.FullyBuffered)
                 .Select(x => Render(cam, world, width, height, samples, x.start, x.end))
-                .SelectMany(x => x);
+                .SelectMany(x => x)
+                .Select(rgb => $"{rgb.r} {rgb.g} {rgb.b}")
+                .ToArray();
+                
+            //Console.WriteLine($"{DateTime.Now} Done. Writing pdb data to {fileName}");
+            //Console.WriteLine($"Total elapsed time: {watch.Elapsed}");
 
             Console.WriteLine("P3");
             Console.WriteLine($"{width} {height}");
             Console.WriteLine("255");
 
-            foreach(var rgb in colorData) {
-                (int r, int g, int b) = rgb;
-                Console.WriteLine($"{r} {g} {b}");
+            foreach(var line in colorData) {
+                Console.WriteLine(line);
             }
         }
     }
