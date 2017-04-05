@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
+
 using static RayTracer.StaticRandom;
 
 namespace RayTracer
@@ -96,7 +96,7 @@ namespace RayTracer
                     wat.Add((ir, ig, ib));
                 }
             }
-            //Console.WriteLine($"Finished rendering chunk of {wat.Count}px in {watch.ElapsedMilliseconds}ms");
+            Console.Error.WriteLine($"Finished rendering chunk of {wat.Count}px in {watch.ElapsedMilliseconds}ms");
             return wat;
         }
 
@@ -117,14 +117,53 @@ namespace RayTracer
             }
         }
 
+        static void WriteToConsole(IEnumerable<string> data, int width, int height)
+        {
+            Console.WriteLine("P3");
+            Console.WriteLine($"{width} {height}");
+            Console.WriteLine("255");
+            foreach(var line in data)
+                Console.WriteLine(line);
+        }
+
+        static void WriteToFile(string fileName, IEnumerable<string> data, int width, int height)
+        {
+            using (var f = new StreamWriter(File.Open(fileName, FileMode.OpenOrCreate)))
+            {
+                f.WriteLine("P3");
+                f.WriteLine($"{width} {height}");
+                f.WriteLine("255");
+                foreach(var line in data)
+                    f.WriteLine(line);
+            }
+        }
+
         static void Main(string[] args)
         {
-            int width = int.Parse(args[0]);
-            int height = int.Parse(args[1]);
-            int samples = int.Parse(args[2]);
-            string fileName = args[3];
+            int width, height, samples;
+            string fileName;
+            try {
+                if (args.Length == 4) {
+                    width = int.Parse(args[0]);
+                    height = int.Parse(args[1]);
+                    samples = int.Parse(args[2]);
+                    fileName = args[3];
+                } else if (args.Length == 3) {
+                    width = int.Parse(args[0]);
+                    height = int.Parse(args[1]);
+                    samples = int.Parse(args[2]);
+                    fileName = null;
+                } else {
+                    throw new ArgumentOutOfRangeException();
+                }
+            } catch (Exception) {
+                Console.WriteLine("Usage: ray height width samplesPerPx (filename)");
+                Console.WriteLine("if output is omitted stdout is used");
+                return;
+            }
+            
 
-            //Console.WriteLine($"{DateTime.Now} Rendering default scene at {width}x{height}px with {samples} samples/px");
+            Console.Error.WriteLine($"{DateTime.Now} Rendering default scene at {width}x{height}px with {samples} samples/px");
             var watch = new Stopwatch();
             watch.Start();
             
@@ -154,15 +193,13 @@ namespace RayTracer
                 .Select(rgb => $"{rgb.r} {rgb.g} {rgb.b}")
                 .ToArray();
                 
-            //Console.WriteLine($"{DateTime.Now} Done. Writing pdb data to {fileName}");
-            //Console.WriteLine($"Total elapsed time: {watch.Elapsed}");
-
-            Console.WriteLine("P3");
-            Console.WriteLine($"{width} {height}");
-            Console.WriteLine("255");
-
-            foreach(var line in colorData) {
-                Console.WriteLine(line);
+            Console.Error.WriteLine($"{DateTime.Now} Done. Writing pdb data to {fileName}");
+            Console.Error.WriteLine($"Total elapsed time: {watch.Elapsed}");
+            
+            if (fileName != null) {
+                WriteToFile(fileName, colorData, width, height);
+            } else {
+                WriteToConsole(colorData, width, height);
             }
         }
     }
