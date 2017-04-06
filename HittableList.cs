@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace RayTracer
 {
-    class HitableList : List<IHitable>, IHitable
+    class HittableList : List<IHittable>, IHittable
     {
         public HitRecord? Hit(Ray r, double tMin, double tMax)
         {

@@ -10,7 +10,7 @@ namespace RayTracer
 {
     class Program
     {
-        static Vec3 Color(Ray r, IHitable world, int depth) {
+        static Vec3 Color(Ray r, IHittable world, int depth) {
             var hit = world.Hit(r, 0.001, double.MaxValue);
             switch (hit) {
                 case HitRecord rec:
@@ -28,7 +28,7 @@ namespace RayTracer
             }
         }
         
-        static IHitable RandomScene()
+        static IHittable RandomScene()
         {
             double rndSqrd()
                 => DRand() * DRand();
@@ -40,7 +40,7 @@ namespace RayTracer
                     0.5*(1 + DRand())
                 );
                 
-            var world = new HitableList()
+            var world = new HittableList()
             {
                 new Sphere(new Vec3(0, -1000, 0), 1000, new Lambertian(0.5, 0.5, 0.5))
             };
@@ -71,7 +71,7 @@ namespace RayTracer
             return world;
         }
 
-        static IEnumerable<(int r, int g, int b)> Render(Camera cam, IHitable world, int width, int height, int samples, int start, int end)
+        static IEnumerable<(int r, int g, int b)> Render(Camera cam, IHittable world, int width, int height, int samples, int start, int end)
         {
             var watch = new Stopwatch();
             watch.Start();

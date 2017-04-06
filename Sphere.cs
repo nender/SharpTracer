@@ -2,7 +2,7 @@ using System;
 
 namespace RayTracer
 {
-    class Sphere : IHitable
+    class Sphere : IHittable
     {
         public Sphere(Vec3 cen, double r, IMaterial material) {
             Center = cen;

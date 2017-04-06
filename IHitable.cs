@@ -14,7 +14,7 @@ namespace RayTracer
         public readonly IMaterial material;
     }
     
-    interface IHitable
+    interface IHittable
     {
         HitRecord? Hit(Ray r, double tMin, double tMax);
     }
