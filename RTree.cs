@@ -11,25 +11,26 @@ namespace RayTracer
             maxItemsPerNode = Math.Max(4, maxEntries);
             minItemsPerNode = (int) Math.Max(2, Math.Ceiling(maxEntries * 0.4));
             
-            root = new RTreeNode<T>();
+            root = new RTreeNode<T>(default(T), null);
         }
         
         public void Insert(T data, BoundingBox3 bounds) {
-            var leaf = ChooseLeaf(data, bounds);
+            (var leaf, var path) = ChooseLeaf(data, bounds);
+            
             if (leaf.Children.Count() + 1 < maxItemsPerNode) {
-                // install E?
-                ExpandTree(leaf);
+                leaf.AddChild(data, bounds);
+                AdjustTree(leaf);
                 return;
             } else {
                 (var left, var right) = SplitNode(leaf);
-                ExpandTree(left, right);
+                AdjustTree(left, right);
                 // if node split propogation resulted in the root being split,
                 // create a new root whose children are the two nodes resulting
                 // from the split
             }
         }
         
-        void ExpandTree(RTreeNode<T> node, RTreeNode<T> other = null) {
+        void AdjustTree(RTreeNode<T> node, RTreeNode<T> other = null) {
             var n = node;
             var nn = other;
             
@@ -41,18 +42,23 @@ namespace RayTracer
             throw new NotImplementedException();
         }
         
-        RTreeNode<T> ChooseLeaf(T data, BoundingBox3 bounds)
+        (RTreeNode<T> node, List<RTreeNode<T>> path) ChooseLeaf(T data, BoundingBox3 bounds)
         {
             var node = root;
+            var path = new List<RTreeNode<T>>();
             
             while (true) {
+                path.Add(node);
                 if (!node.Children.Any())
-                    return node;
+                    return (node, path);
                 
-                throw new NotImplementedException();
-                // let F be the entry in node whose bounding box F.I needs
-                // least enlargement to include E.I
-                // Resolve ties by choosing entry with the rectangle of smallest area.
+                node = node
+                    .Children
+                    .Select(x => (node: x, newBounds: x.Bounds.Extend(bounds)))
+                    .OrderBy(x => x.node.Bounds.Volume() - x.newBounds.Volume())
+                    .ThenBy(x => x.newBounds.Volume())
+                    .Select(x => x.node)
+                    .First();
             }
         }
         
@@ -77,6 +83,11 @@ namespace RayTracer
         
         Vec3 Min { get; }
         Vec3 Max { get; }
+
+        public double Volume() {
+            var size = Max - Min;
+            return size.X * size.Y * size.Z;
+        }
         
         public bool Intersects(BoundingBox3 other)
             => !(Max.X < other.Min.X) &&
@@ -93,12 +104,47 @@ namespace RayTracer
                 (Min.X < other.Min.X) &&
                 (Min.Y < other.Min.Y) &&
                 (Min.Z < other.Min.Z);
+        
+        public BoundingBox3 Extend(BoundingBox3 other) {
+            if (this.Contains(other))
+                return this;
+
+            var minx = Math.Min(Min.X, other.Min.X);
+            var miny = Math.Min(Min.Y, other.Min.Y);
+            var minz = Math.Min(Min.Z, other.Min.Z);
+            var min = new Vec3(minx, miny, minz);
+
+            var maxx = Math.Max(Max.X, other.Max.X);
+            var maxy = Math.Max(Max.Y, other.Max.Y);
+            var maxz = Math.Max(Max.Z, other.Max.Z);
+            var max = new Vec3(maxx, maxy, maxz);
+
+            return new BoundingBox3(min, max);
+        }
     }
     
     class RTreeNode<T>
     {
+        public RTreeNode(T data, BoundingBox3 bounds) {
+            Data = data;
+            Bounds = bounds;
+        }
+
         public T Data { get; }
-        public BoundingBox3 Bounds { get; }
-        public IList<T> Children { get; }
+        public BoundingBox3 Bounds { get; private set; }
+
+        public IEnumerable<RTreeNode<T>> Children
+            => childList ?? Enumerable.Empty<RTreeNode<T>>();
+        List<RTreeNode<T>> childList;
+
+        public void AddChild(T data, BoundingBox3 bounds) {
+            var node = new RTreeNode<T>(data, bounds);
+
+            if (childList == null)
+                childList = new List<RTreeNode<T>>();
+
+            childList.Add(node);
+            Bounds = Bounds.Extend(node.Bounds);
+        }
     }
 }
