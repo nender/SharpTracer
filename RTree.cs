@@ -11,7 +11,7 @@ namespace RayTracer
             maxItemsPerNode = Math.Max(4, maxEntries);
             minItemsPerNode = (int) Math.Max(2, Math.Ceiling(maxEntries * 0.4));
             
-            root = new RTreeNode<T>(default(T), null);
+            root = new RTreeNode<T>(default(T), BoundingBox3.Zero);
         }
         
         public void Insert(T data, BoundingBox3 bounds) {
@@ -19,23 +19,45 @@ namespace RayTracer
             
             if (leaf.Children.Count() + 1 < maxItemsPerNode) {
                 leaf.AddChild(data, bounds);
-                AdjustTree(leaf);
+                AdjustTree(leaf, path);
                 return;
             } else {
                 (var left, var right) = SplitNode(leaf);
-                AdjustTree(left, right);
-                // if node split propogation resulted in the root being split,
-                // create a new root whose children are the two nodes resulting
-                // from the split
+                AdjustTree(left, path, right);
+                if (leaf == root)
+                {
+                    var newRoot = new RTreeNode<T>(default(T), null);
+                    newRoot.AddChild(left);
+                    newRoot.AddChild(right);
+                }
             }
         }
         
-        void AdjustTree(RTreeNode<T> node, RTreeNode<T> other = null) {
-            var n = node;
-            var nn = other;
+        void AdjustTree(RTreeNode<T> node, List<RTreeNode<T>> path, RTreeNode<T> other = null) {
+            var newNode = node;
+            var splitNode = other;
             
-            if (n == root)
-                return;
+            int i = path.Count() - 1;
+            while (true) {
+                if (newNode == root)
+                    return;
+                
+                i -= 1;
+                var parent = path[i];
+                RTreeNode<T> splitParent = null;
+                
+                parent.Bounds.Extend(newNode.Bounds);
+                
+                if (splitNode != null) {
+                    if (parent.Children.Count() + 1 <= maxItemsPerNode)
+                        parent.AddChild(splitNode.Data, splitNode.Bounds);
+                    else
+                        (parent, splitParent) = SplitNode(parent);
+                }
+                
+                newNode = parent;
+                splitNode = splitParent;
+            }
         }
         
         (RTreeNode<T> left, RTreeNode<T> right) SplitNode(RTreeNode<T> toSplit) {
@@ -68,10 +90,9 @@ namespace RayTracer
 
     class BoundingBox3
     {
+        public static readonly BoundingBox3 Zero = new BoundingBox3(new Vec3(0,0,0), new Vec3(0,0,0));
+        
         public BoundingBox3(Vec3 p1, Vec3 p2) {
-            if (p1.Equals(p2))
-                throw new ArgumentOutOfRangeException();
-                
             if (p1.Length() < p2.Length()) {
                 Min = p1;
                 Max = p2;
@@ -136,10 +157,14 @@ namespace RayTracer
         public IEnumerable<RTreeNode<T>> Children
             => childList ?? Enumerable.Empty<RTreeNode<T>>();
         List<RTreeNode<T>> childList;
+        
 
         public void AddChild(T data, BoundingBox3 bounds) {
             var node = new RTreeNode<T>(data, bounds);
-
+            AddChild(node);
+        }
+        
+        public void AddChild(RTreeNode<T> node) {
             if (childList == null)
                 childList = new List<RTreeNode<T>>();
 

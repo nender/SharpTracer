@@ -67,8 +67,20 @@ namespace RayTracer
                 new Sphere(new Vec3(4, 1, 0), 1.0, new Reflective(new Vec3(0.7, 0.6, 0.5), 0.0))
             };
             world.AddRange(x);
-                    
+            var rtree = new RTree<Sphere>();
+            foreach (var s in world) {
+                rtree.Insert((Sphere)s, BoundSphere((Sphere)s));
+            }
             return world;
+        }
+        
+        static BoundingBox3 BoundSphere(Sphere s)
+        {
+            var radius = s.Radius;
+            var radiusVec = new Vec3(radius, radius, radius);
+            var min = s.Center  - radiusVec;
+            var max = s.Center + radiusVec;
+            return new BoundingBox3(min, max);
         }
 
         static IEnumerable<(int r, int g, int b)> Render(Camera cam, IHittable world, int width, int height, int samples, int start, int end)
