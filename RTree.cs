@@ -61,7 +61,60 @@ namespace RayTracer
         }
         
         (RTreeNode<T> left, RTreeNode<T> right) SplitNode(RTreeNode<T> toSplit) {
-            throw new NotImplementedException();
+            (var e1, var e2) = PickSeeds(toSplit.Children);
+            
+            var left = new RTreeNode<T>(default(T), BoundingBox3.Zero);
+            left.AddChild(e1);
+            
+            var right = new RTreeNode<T>(default(T), BoundingBox3.Zero);
+            right.AddChild(e2);
+            
+            var nodes = new Queue<RTreeNode<T>>(toSplit.Children);
+            while (nodes.Count() <= 0) {
+                if (left.Children.Count() + nodes.Count() == minItemsPerNode) {
+                    foreach (var item in nodes)
+                        left.AddChild(item);
+                    break;
+                } else if (right.Children.Count() + nodes.Count() == minItemsPerNode) {
+                    foreach (var item in nodes)
+                        right.AddChild(item);
+                    break;
+                }
+                
+                var biggestCost = 
+                    nodes.Select(n => {
+                        var g1 = n.Bounds.Volume() - right.Bounds.Extend(n.Bounds).Volume();
+                        var g2 = n.Bounds.Volume() - left.Bounds.Extend(n.Bounds).Volume();
+                        var diff = Math.Abs(g1 - g2);
+                        return (diff: diff, node: n);
+                    })
+                    .OrderBy(n => n.diff)
+                    .Select(n => n.node)
+                    .First();
+                    
+            }
+            throw new NotImplementedException();    
+        }
+        
+        static (RTreeNode<T> left, RTreeNode<T> right) PickSeeds(IEnumerable<RTreeNode<T>> nodes) {
+            var pairs =
+                    from e1 in nodes
+                    from e2 in nodes
+                    where (e1 != e2 && e1.Bounds.Min.SquaredLength() < e2.Bounds.Min.SquaredLength())
+                    select (e1: e1, e2: e2);
+                    
+            var zero = BoundingBox3.Zero;
+            return pairs.Select(p => {
+                    var bounds =
+                        zero.Extend(p.e1.Bounds)
+                            .Extend(p.e2.Bounds);
+                            
+                    var d = bounds.Volume() - p.e1.Bounds.Volume() - p.e2.Bounds.Volume();
+                    return (e1: p.e1, e2: p.e2, d: d);
+                })
+                .OrderBy(x => x.d)
+                .Select(x => (x.e1, x.e2))
+                .First();
         }
         
         (RTreeNode<T> node, List<RTreeNode<T>> path) ChooseLeaf(T data, BoundingBox3 bounds)
@@ -90,7 +143,8 @@ namespace RayTracer
 
     class BoundingBox3
     {
-        public static readonly BoundingBox3 Zero = new BoundingBox3(new Vec3(0,0,0), new Vec3(0,0,0));
+        public static readonly BoundingBox3 Zero =
+            new BoundingBox3(new Vec3(0,0,0), new Vec3(0,0,0));
         
         public BoundingBox3(Vec3 p1, Vec3 p2) {
             if (p1.Length() < p2.Length()) {
@@ -102,8 +156,8 @@ namespace RayTracer
             }
         }
         
-        Vec3 Min { get; }
-        Vec3 Max { get; }
+        public Vec3 Min { get; private set; }
+        public Vec3 Max { get; private set; }
 
         public double Volume() {
             var size = Max - Min;
