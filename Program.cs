@@ -13,14 +13,14 @@ namespace RayTracer
 {
     class Program
     {
-        static Vec3 Color(Ray r, IHittable world, int depth) {
+        static Vec3 CalculateColor(Ray r, IHittable world, int depth) {
             var hit = world.Hit(r, 0.001, double.MaxValue);
             switch (hit) {
                 case HitRecord rec:
                     var scattered = rec.material.Scatter(r, rec);
                     if (depth < 50 && scattered != null) {
                         (Ray scatter, Vec3 atten) = scattered.Value;
-                        return scattered.Value.atten * Color(scattered.Value.scatter, world, depth + 1);
+                        return scattered.Value.atten * CalculateColor(scattered.Value.scatter, world, depth + 1);
                     }
                     else
                         return new Vec3(0,0,0);
@@ -89,7 +89,7 @@ namespace RayTracer
                         var v = ((height - j) + DRand()) / height;
                         var r = cam.getRay(u, v);
                         var p = r.PointAtParameter(2);
-                        col += Color(r, world, depth: 0);
+                        col += CalculateColor(r, world, depth: 0);
                     }
 
                     col /= samples;
