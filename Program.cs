@@ -43,7 +43,7 @@ namespace RayTracer
                     0.5*(1 + DRand())
                 );
 
-            var world = new HittableList()
+            var list = new List<IHittable>()
             {
                 new Sphere(new Vec3(0, -1000, 0), 1000, new Lambertian(0.5, 0.5, 0.5))
             };
@@ -54,11 +54,11 @@ namespace RayTracer
                     var center = new Vec3(a+0.9*DRand(), 0.2, b+0.9*DRand());
                     if ((center - new Vec3(4, 0.2, 0)).Length() > 0.9) {
                         if (chooseMat < 0.8) {
-                            world.Add(new Sphere(center, 0.2, new Lambertian(rndSqrd(), rndSqrd(), rndSqrd())));
+                            list.Add(new Sphere(center, 0.2, new Lambertian(rndSqrd(), rndSqrd(), rndSqrd())));
                         } else if (chooseMat < 0.95) {
-                            world.Add(new Sphere(center, 0.2, new Reflective(metalVec(), DRand())));
+                            list.Add(new Sphere(center, 0.2, new Reflective(metalVec(), DRand())));
                         } else {
-                            world.Add(new Sphere(center, 0.2, new Refractive(1.5)));
+                            list.Add(new Sphere(center, 0.2, new Refractive(1.5)));
                         }
                     }
                 }
@@ -69,9 +69,9 @@ namespace RayTracer
                 new Sphere(new Vec3(-4, 1, 0), 1.0, new Lambertian(new Vec3(0.4, 0.2, 0.1))),
                 new Sphere(new Vec3(4, 1, 0), 1.0, new Reflective(new Vec3(0.7, 0.6, 0.5), 0.0))
             };
-            world.AddRange(x);
+            list.AddRange(x);
 
-            return world;
+            return new StaticOctree(list);
         }
 
         static byte[] Render(Camera cam, IHittable world, int width, int height, int samples, int start, int end)
