@@ -9,7 +9,11 @@ namespace RayTracer
             Y = y;
             Z = z;
         }
-        
+
+        public Vec3(double v){
+            X = Y = Z = v;
+        }
+
         public readonly double X, Y, Z;
         public double R => X;
         public double G => Y;

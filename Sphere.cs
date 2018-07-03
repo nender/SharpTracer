@@ -37,5 +37,11 @@ namespace RayTracer
             }
             return null;
         }
+
+        public (Vec3, Vec3) BoundingBox() {
+            var p1 = Center + new Vec3(Radius);
+            var p2 = Center - new Vec3(Radius);
+            return (p1, p2);
+        }
     }
 }
