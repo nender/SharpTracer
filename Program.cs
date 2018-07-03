@@ -27,24 +27,24 @@ namespace RayTracer
                     return (1 - t) * new Vec3(1,1,1) + t * new Vec3(0.5, 0.7, 1.0);
             }
         }
-        
+
         static IHittable RandomScene()
         {
             double rndSqrd()
                 => DRand() * DRand();
-            
+
             Vec3 metalVec()
                 => new Vec3(
                     0.5*(1 + DRand()),
                     0.5*(1 + DRand()),
                     0.5*(1 + DRand())
                 );
-                
+
             var world = new HittableList()
             {
                 new Sphere(new Vec3(0, -1000, 0), 1000, new Lambertian(0.5, 0.5, 0.5))
             };
-            
+
             for (int a = -11; a < 11; a++) {
                 for (int b = -11; b < 11; b++) {
                     var chooseMat = DRand();
@@ -67,7 +67,7 @@ namespace RayTracer
                 new Sphere(new Vec3(4, 1, 0), 1.0, new Reflective(new Vec3(0.7, 0.6, 0.5), 0.0))
             };
             world.AddRange(x);
-                    
+
             return world;
         }
 
@@ -161,14 +161,13 @@ namespace RayTracer
                 Console.WriteLine("if output is omitted stdout is used");
                 return;
             }
-            
 
             Console.Error.WriteLine($"{DateTime.Now} Rendering default scene at {width}x{height}px with {samples} samples/px");
             var watch = new Stopwatch();
             watch.Start();
-            
+
             var world = RandomScene();
-            
+
             var lookFrom = new Vec3(13,2,3);
             var lookAt =  new Vec3(0,0,0);
             var cam = new Camera(
@@ -192,10 +191,10 @@ namespace RayTracer
                 .SelectMany(x => x)
                 .Select(rgb => $"{rgb.r} {rgb.g} {rgb.b}")
                 .ToArray();
-                
+
             Console.Error.WriteLine($"{DateTime.Now} Done. Writing pdb data to {fileName}");
             Console.Error.WriteLine($"Total elapsed time: {watch.Elapsed}");
-            
+
             if (fileName != null) {
                 WriteToFile(fileName, colorData, width, height);
             } else {
