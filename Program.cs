@@ -6,6 +6,9 @@ using System.Linq;
 
 using static RayTracer.StaticRandom;
 
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+
 namespace RayTracer
 {
     class Program
@@ -71,11 +74,12 @@ namespace RayTracer
             return world;
         }
 
-        static IEnumerable<(int r, int g, int b)> Render(Camera cam, IHittable world, int width, int height, int samples, int start, int end)
+        static byte[] Render(Camera cam, IHittable world, int width, int height, int samples, int start, int end)
         {
             var watch = new Stopwatch();
             watch.Start();
-            var wat = new List<(int, int, int)>();
+            var wat = new byte[(end - start + 1) * width * 4];
+            var z = 0;
             for (int j = start; j <= end; j++) {
                 for (int i = 0; i < width; i++) {
                     var col = new Vec3(0, 0, 0);
@@ -90,13 +94,14 @@ namespace RayTracer
 
                     col /= samples;
                     col = new Vec3(Math.Sqrt(col.X), Math.Sqrt(col.Y), Math.Sqrt(col.Z));
-                    var ir = (int)(255.99 * col.R);
-                    var ig = (int)(255.99 * col.G);
-                    var ib = (int)(255.99 * col.B);
-                    wat.Add((ir, ig, ib));
+                    wat[z] = (byte)(255.99 * col.R);
+                    wat[z + 1] = (byte)(255.99 * col.G);
+                    wat[z + 2] = (byte)(255.99 * col.B);
+                    wat[z + 3] = 255;
+                    z += 4;
                 }
             }
-            Console.Error.WriteLine($"Finished rendering chunk of {wat.Count}px in {watch.ElapsedMilliseconds}ms");
+            Console.Error.WriteLine($"Finished rendering chunk of {wat.Length / 4}px in {watch.ElapsedMilliseconds}ms");
             return wat;
         }
 
@@ -117,25 +122,11 @@ namespace RayTracer
             }
         }
 
-        static void WriteToConsole(IEnumerable<string> data, int width, int height)
+        static void WriteToFile(string fileName, byte[] data, int width, int height)
         {
-            Console.WriteLine("P3");
-            Console.WriteLine($"{width} {height}");
-            Console.WriteLine("255");
-            foreach(var line in data)
-                Console.WriteLine(line);
-        }
-
-        static void WriteToFile(string fileName, IEnumerable<string> data, int width, int height)
-        {
-            using (var f = new StreamWriter(File.Open(fileName, FileMode.OpenOrCreate)))
-            {
-                f.WriteLine("P3");
-                f.WriteLine($"{width} {height}");
-                f.WriteLine("255");
-                foreach(var line in data)
-                    f.WriteLine(line);
-            }
+            var img = Image.LoadPixelData<Byte4>(data, width, height);
+            using (var f = File.Open(fileName, FileMode.OpenOrCreate))
+                img.SaveAsPng(f as Stream);
         }
 
         static void Main(string[] args)
@@ -189,17 +180,12 @@ namespace RayTracer
                 .AsOrdered()
                 .Select(x => Render(cam, world, width, height, samples, x.start, x.end))
                 .SelectMany(x => x)
-                .Select(rgb => $"{rgb.r} {rgb.g} {rgb.b}")
                 .ToArray();
 
             Console.Error.WriteLine($"{DateTime.Now} Done. Writing pdb data to {fileName}");
             Console.Error.WriteLine($"Total elapsed time: {watch.Elapsed}");
 
-            if (fileName != null) {
-                WriteToFile(fileName, colorData, width, height);
-            } else {
-                WriteToConsole(colorData, width, height);
-            }
+            WriteToFile(fileName, colorData, width, height);
         }
     }
 }
