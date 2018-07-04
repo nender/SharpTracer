@@ -9,11 +9,11 @@ namespace RayTracer
             Radius = r;
             Material = material;
         }
-        
+
         readonly Vec3 Center;
         readonly double Radius;
         readonly IMaterial Material;
-        
+
         public HitRecord? Hit(Ray r, double tMin, double tMax) {
             var oc = r.Origin - Center;
             double a = r.Direction.Dot(r.Direction);
