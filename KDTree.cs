@@ -24,6 +24,7 @@ namespace RayTracer {
     }
 
     class KDNode {
+        const int ArbitraryPopLimit = 4;
         public BoundingBox BBox;
         List<IHitable> objects = new List<IHitable>();
         KDNode LeftChild;
@@ -31,37 +32,52 @@ namespace RayTracer {
 
         public KDNode(IEnumerable<IHitable> objects) {
             BBox = new BoundingBox(objects);
+            if (objects.Count() <= ArbitraryPopLimit)
+                return;
+
             var left = new List<IHitable>();
             var right = new List<IHitable>();
 
-            var splitPoint = BBox.Midpoint;
-            var axis = chooseSplitAxis(BBox);
-            int splitCount = 0;
+            Vec3 splitPoint = new Vec3(0);
             foreach (var o in objects) {
-                throw new NotImplementedException();
-                // if object intersects the plane
-                    left.Add(o);
-                    right.Add(o);
-                // else if left of plane
-                    left.Add(o);
-                    splitCount += 1;
-                // else
-                    right.Add(o);
-                    splitCount += 1;
+                splitPoint += (o.BoundingBox().Midpoint.Value) * 1.0 / objects.Count();
+            }
+            var splitAxis = chooseSplitAxis(BBox);
+
+            foreach (var o in objects) {
+                switch (splitAxis) {
+                    case SplitAxis.X:
+                        if (splitPoint.X >= o.BoundingBox().Midpoint.Value.X)
+                            right.Add(o);
+                        else
+                            left.Add(o);
+                        break;
+                    case SplitAxis.Y:
+                        if (splitPoint.Y >= o.BoundingBox().Midpoint.Value.Y)
+                            right.Add(o);
+                        else
+                            left.Add(o);
+                        break;
+                    case SplitAxis.Z:
+                        if (splitPoint.Z >= o.BoundingBox().Midpoint.Value.Z)
+                            right.Add(o);
+                        else
+                            left.Add(o);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
 
-            if (splitCount <= objects.Count() / 2)
-                return;
-            
             LeftChild = new KDNode(left);
             RightChild = new KDNode(right);
         }
 
         SplitAxis chooseSplitAxis(BoundingBox box) {
             return new Dictionary<SplitAxis, double>() {
-                {SplitAxis.X, box.Width},
-                {SplitAxis.Y, box.Height},
-                {SplitAxis.Z, box.Depth}
+                {SplitAxis.X, box.Width.Value},
+                {SplitAxis.Y, box.Height.Value},
+                {SplitAxis.Z, box.Depth.Value}
             }
             .OrderBy(x => x.Value)
             .Select(x => x.Key)
