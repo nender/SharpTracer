@@ -26,14 +26,16 @@ namespace RayTracer {
     class KDNode {
         const int ArbitraryPopLimit = 4;
         public BoundingBox BBox;
-        List<IHitable> objects = new List<IHitable>();
+        IEnumerable<IHitable> Objects;
         KDNode LeftChild;
         KDNode RightChild;
 
         public KDNode(IEnumerable<IHitable> objects) {
             BBox = new BoundingBox(objects);
-            if (objects.Count() <= ArbitraryPopLimit)
+            if (objects.Count() <= ArbitraryPopLimit) {
+                Objects = objects;
                 return;
+            }
 
             var splitAxis = chooseSplitAxis(BBox);
 
@@ -52,8 +54,9 @@ namespace RayTracer {
                     throw new ArgumentOutOfRangeException();
             }
 
-            var left = sorted.Take(objects.Count() / 2);
-            var right = sorted.Skip(objects.Count() / 2);
+            var halfCount = objects.Count() / 2;
+            var left = sorted.Take(halfCount);
+            var right = sorted.Skip(halfCount);
 
             LeftChild = new KDNode(left);
             RightChild = new KDNode(right);
@@ -83,7 +86,7 @@ namespace RayTracer {
                         return null;
                 } else {
                     HitRecord? bestHit = null;
-                    foreach (var o in objects) {
+                    foreach (var o in Objects) {
                         var hit = o.Hit(r, tMin, tMax);
                         if (hit?.t < bestHit?.t || hit != null && bestHit == null)
                             bestHit = hit;
