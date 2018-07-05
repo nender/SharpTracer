@@ -5,9 +5,8 @@ using System.Collections.Generic;
 namespace RayTracer {
     /// Axis aligned bounding box
     class BoundingBox {
-        public double? Width, Height, Depth;
-        public Vec3? Midpoint;
-
+        public double Width, Height, Depth;
+        public Vec3 Midpoint;
         Vec3 Max;
         Vec3 Min;
 
@@ -16,11 +15,13 @@ namespace RayTracer {
                 throw new ArgumentException("P2 is greater than P1!");
             Max = max;
             Min = min;
+            Initialize();
         }
 
         public BoundingBox(Vec3 center, double radius) {
             Max = center + new Vec3(radius);
             Min = center - new Vec3(radius);
+            Initialize();
         }
 
         public BoundingBox(IEnumerable<IHitable> objects) {
@@ -39,6 +40,7 @@ namespace RayTracer {
 
             Max = new Vec3(bounds[0], bounds[1], bounds[2]);
             Min = new Vec3(bounds[3], bounds[4], bounds[5]);
+            Initialize();
         }
 
         public bool Intersect(Ray r) {
@@ -63,6 +65,13 @@ namespace RayTracer {
                 return false;
             
             return true;
+        }
+
+        void Initialize() {
+            Midpoint = (Max - Min) / 2.0;
+            Width = Max.X - Min.X;
+            Height = Max.Y - Min.Y;
+            Depth = Max.Z - Min.Z;
         }
     }
 }

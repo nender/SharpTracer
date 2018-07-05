@@ -40,26 +40,26 @@ namespace RayTracer {
 
             Vec3 splitPoint = new Vec3(0);
             foreach (var o in objects) {
-                splitPoint += (o.BoundingBox().Midpoint.Value) * 1.0 / objects.Count();
+                splitPoint += (o.BoundingBox().Midpoint) * 1.0 / objects.Count();
             }
             var splitAxis = chooseSplitAxis(BBox);
 
             foreach (var o in objects) {
                 switch (splitAxis) {
                     case SplitAxis.X:
-                        if (splitPoint.X >= o.BoundingBox().Midpoint.Value.X)
+                        if (splitPoint.X >= o.BoundingBox().Midpoint.X)
                             right.Add(o);
                         else
                             left.Add(o);
                         break;
                     case SplitAxis.Y:
-                        if (splitPoint.Y >= o.BoundingBox().Midpoint.Value.Y)
+                        if (splitPoint.Y >= o.BoundingBox().Midpoint.Y)
                             right.Add(o);
                         else
                             left.Add(o);
                         break;
                     case SplitAxis.Z:
-                        if (splitPoint.Z >= o.BoundingBox().Midpoint.Value.Z)
+                        if (splitPoint.Z >= o.BoundingBox().Midpoint.Z)
                             right.Add(o);
                         else
                             left.Add(o);
@@ -75,9 +75,9 @@ namespace RayTracer {
 
         SplitAxis chooseSplitAxis(BoundingBox box) {
             return new Dictionary<SplitAxis, double>() {
-                {SplitAxis.X, box.Width.Value},
-                {SplitAxis.Y, box.Height.Value},
-                {SplitAxis.Z, box.Depth.Value}
+                {SplitAxis.X, box.Width},
+                {SplitAxis.Y, box.Height},
+                {SplitAxis.Z, box.Depth}
             }
             .OrderBy(x => x.Value)
             .Select(x => x.Key)
