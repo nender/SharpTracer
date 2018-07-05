@@ -78,12 +78,18 @@ namespace RayTracer {
                 if (LeftChild != null || RightChild != null) {
                     var leftHit = LeftChild?.Hit(r, tMin, tMax);
                     var rightHit = RightChild?.Hit(r, tMin, tMax);
-                    if (leftHit?.t <= rightHit?.t)
+                    if (leftHit != null && rightHit != null) {
+                        if (leftHit?.t < rightHit?.t)
+                            return leftHit;
+                        else
+                            return rightHit;
+                    } else if (leftHit != null) {
                         return leftHit;
-                    else if (rightHit?.t > leftHit?.t)
+                    } else if (rightHit != null) {
                         return rightHit;
-                    else
+                    } else {
                         return null;
+                    }
                 } else {
                     HitRecord? bestHit = null;
                     foreach (var o in Objects) {
