@@ -35,39 +35,25 @@ namespace RayTracer {
             if (objects.Count() <= ArbitraryPopLimit)
                 return;
 
-            var left = new List<IHitable>();
-            var right = new List<IHitable>();
-
-            Vec3 splitPoint = new Vec3(0);
-            foreach (var o in objects) {
-                splitPoint += (o.BoundingBox().Midpoint) * 1.0 / objects.Count();
-            }
             var splitAxis = chooseSplitAxis(BBox);
 
-            foreach (var o in objects) {
-                switch (splitAxis) {
-                    case SplitAxis.X:
-                        if (splitPoint.X >= o.BoundingBox().Midpoint.X)
-                            right.Add(o);
-                        else
-                            left.Add(o);
-                        break;
-                    case SplitAxis.Y:
-                        if (splitPoint.Y >= o.BoundingBox().Midpoint.Y)
-                            right.Add(o);
-                        else
-                            left.Add(o);
-                        break;
-                    case SplitAxis.Z:
-                        if (splitPoint.Z >= o.BoundingBox().Midpoint.Z)
-                            right.Add(o);
-                        else
-                            left.Add(o);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+            IEnumerable<IHitable> sorted = null;
+            switch (splitAxis) {
+                case SplitAxis.X:
+                    sorted = objects.OrderBy(x => x.BoundingBox().Midpoint.X);
+                    break;
+                case SplitAxis.Y:
+                    sorted = objects.OrderBy(x => x.BoundingBox().Midpoint.Y);
+                    break;
+                case SplitAxis.Z:
+                    sorted = objects.OrderBy(x => x.BoundingBox().Midpoint.Z);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
+
+            var left = sorted.Take(objects.Count() / 2);
+            var right = sorted.Skip(objects.Count() / 2);
 
             LeftChild = new KDNode(left);
             RightChild = new KDNode(right);

@@ -45,7 +45,10 @@ namespace RayTracer
 
             var list = new List<IHitable>()
             {
-                new Sphere(new Vec3(0, -1000, 0), 1000, new Lambertian(0.5, 0.5, 0.5))
+                new Sphere(new Vec3(0, -1000, 0), 1000, new Lambertian(0.5, 0.5, 0.5)),
+                new Sphere(new Vec3(0, 1, 0), 1.0, new Refractive(1.5)),
+                new Sphere(new Vec3(-4, 1, 0), 1.0, new Lambertian(new Vec3(0.4, 0.2, 0.1))),
+                new Sphere(new Vec3(4, 1, 0), 1.0, new Reflective(new Vec3(0.7, 0.6, 0.5), 0.0))
             };
 
             for (int a = -11; a < 11; a++) {
@@ -63,13 +66,6 @@ namespace RayTracer
                     }
                 }
             }
-
-            var x = new[] {
-                new Sphere(new Vec3(0, 1, 0), 1.0, new Refractive(1.5)),
-                new Sphere(new Vec3(-4, 1, 0), 1.0, new Lambertian(new Vec3(0.4, 0.2, 0.1))),
-                new Sphere(new Vec3(4, 1, 0), 1.0, new Reflective(new Vec3(0.7, 0.6, 0.5), 0.0))
-            };
-            list.AddRange(x);
 
             return new KDTree(list);
         }
