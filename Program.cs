@@ -71,7 +71,7 @@ namespace RayTracer
             };
             list.AddRange(x);
 
-            return new StaticOctree(list);
+            return new KDTree(list);
         }
 
         static byte[] Render(Camera cam, IHittable world, int width, int height, int samples, int start, int end)
