@@ -1,8 +1,10 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace RayTracer
 {
-    struct Vec3
+    struct Vec3 : IEnumerable<double>
     {
         public Vec3(double x, double y, double z) {
             X = x;
@@ -54,15 +56,29 @@ namespace RayTracer
             
         public static Vec3 operator /(Vec3 v1, double d)
             => new Vec3(v1.X / d, v1.Y / d, v1.Z / d);
-            
+
         public double Dot(Vec3 other)
             => X * other.X + Y * other.Y + Z * other.Z;
-            
+
         public Vec3 Cross(Vec3 other)
             => new Vec3(
                 Y*other.Z - Z*other.Y,
                 -(X*other.Z - Z*other.X),
                 X*other.Y - Y*other.X
             );
+
+        public IEnumerator<double> GetEnumerator()
+        {
+            yield return X;
+            yield return Y;
+            yield return Z;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            yield return X;
+            yield return Y;
+            yield return Z;
+        }
     }
 }
