@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace RayTracer
 {
-    class HittableList : List<IHittable>, IHittable
+    class HitableList : List<IHitable>, IHitable
     {
         public HitRecord? Hit(Ray r, double tMin, double tMax)
         {
@@ -17,5 +17,8 @@ namespace RayTracer
             }
             return bestRecord;
         }
+
+        public BoundingBox BoundingBox()
+            => new BoundingBox(this);
     }
 }

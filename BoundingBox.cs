@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace RayTracer {
@@ -21,8 +22,23 @@ namespace RayTracer {
             P2 = center - new Vec3(radius);
         }
 
-        public BoundingBox(IEnumerable<IHittable> items) {
-            throw new NotImplementedException();
+        public BoundingBox(IEnumerable<IHitable> objects) {
+            const double inf = double.PositiveInfinity;
+            // bounds is a concatenation of the two points
+            var bounds = new double[6] {-inf, -inf, -inf, inf, inf, inf};
+            foreach (var o in objects) {
+                var box = o.BoundingBox();
+                var ibounds = box.P1.Concat(box.P2).ToArray();
+                for (int i = 0; i < 3; i++)
+                    if (ibounds[i] > bounds[i])
+                        bounds[i] = ibounds[i];
+                for (int i = 2; i < ibounds.Length; i++)
+                    if (ibounds[i] < bounds[i])
+                        bounds[i] = ibounds[i];
+            }
+
+            P1 = new Vec3(bounds[0], bounds[1], bounds[2]);
+            P2 = new Vec3(bounds[3], bounds[4], bounds[5]);
         }
 
         public bool Intersect(BoundingBox other) {

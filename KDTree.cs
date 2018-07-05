@@ -3,17 +3,19 @@ using System.Linq;
 using System.Collections.Generic;
 
 namespace RayTracer {
-    class KDTree : IHittable
+    class KDTree : IHitable
     {
         KDNode Root;
 
-        public KDTree(IEnumerable<IHittable> objects) {
+        public KDTree(IEnumerable<IHitable> objects) {
             Root = new KDNode(objects);
         }
 
-        public HitRecord? Hit(Ray r, double tMin, double tMax) {
-            return Root.Hit(r, tMin, tMax);
-        }
+        public HitRecord? Hit(Ray r, double tMin, double tMax)
+            => Root.Hit(r, tMin, tMax);
+
+        public BoundingBox BoundingBox()
+            => Root?.BBox;
     }
 
     enum SplitAxis {
@@ -23,16 +25,16 @@ namespace RayTracer {
     }
 
     class KDNode {
-        BoundingBox BBox;
-        List<IHittable> objects = new List<IHittable>();
+        public BoundingBox BBox;
+        List<IHitable> objects = new List<IHitable>();
         KDNode LeftChild;
         KDNode RightChild;
 
-        public KDNode(IEnumerable<IHittable> objects)
+        public KDNode(IEnumerable<IHitable> objects)
         {
             BBox = new BoundingBox(objects);
-            var left = new List<IHittable>();
-            var right = new List<IHittable>();
+            var left = new List<IHitable>();
+            var right = new List<IHitable>();
 
             var splitPoint = BBox.Midpoint;
             var axis = chooseSplitAxis(BBox);
