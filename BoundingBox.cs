@@ -33,7 +33,7 @@ namespace RayTracer {
                 for (int i = 0; i < 3; i++)
                     if (ibounds[i] > bounds[i])
                         bounds[i] = ibounds[i];
-                for (int i = 2; i < ibounds.Length; i++)
+                for (int i = 3; i < ibounds.Length; i++)
                     if (ibounds[i] < bounds[i])
                         bounds[i] = ibounds[i];
             }
