@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-using static RayTracer.StaticRandom;
-
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+
+using static RayTracer.StaticRandom;
 
 namespace RayTracer
 {
@@ -31,8 +31,7 @@ namespace RayTracer
             }
         }
 
-        static IHitable RandomScene()
-        {
+        static IEnumerable<IHitable> RandomScene() {
             double rndSqrd()
                 => DRand() * DRand();
 
@@ -67,11 +66,10 @@ namespace RayTracer
                 }
             }
 
-            return new KDTree(list);
+            return list;
         }
 
-        static byte[] Render(Camera cam, IHitable world, int width, int height, int samples, int start, int end)
-        {
+        static byte[] Render(Camera cam, IHitable world, int width, int height, int samples, int start, int end) {
             var watch = new Stopwatch();
             watch.Start();
             var wat = new byte[(end - start + 1) * width * 4];
@@ -153,7 +151,7 @@ namespace RayTracer
             var watch = new Stopwatch();
             watch.Start();
 
-            var world = RandomScene();
+            var world = new KDTree(RandomScene());
 
             var lookFrom = new Vec3(13,2,3);
             var lookAt =  new Vec3(0,0,0);
