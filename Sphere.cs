@@ -4,15 +4,19 @@ namespace RayTracer
 {
     class Sphere : IHitable
     {
+        static int idCount = 0;
         public Sphere(Vec3 cen, double r, IMaterial material) {
             Center = cen;
             Radius = r;
             Material = material;
+
+            Id = idCount++;
         }
 
         readonly Vec3 Center;
         readonly double Radius;
         readonly IMaterial Material;
+        readonly int Id;
 
         public HitRecord? Hit(Ray r, double tMin, double tMax) {
             var oc = r.Origin - Center;
@@ -25,14 +29,14 @@ namespace RayTracer
                 if (t < tMax && t > tMin) {
                     var p = r.PointAtParameter(t);
                     var normal = (p - Center) / Radius;
-                    return new HitRecord(t, p, normal, Material);
+                    return new HitRecord(t, p, normal, Material, this);
                 }
                 
                 t = (-b + Math.Sqrt(descriminant)) / a;
                 if (t < tMax && t > tMin) {
                     var p = r.PointAtParameter(t);
                     var normal = (p -Center) / Radius;
-                    return new HitRecord(t, p, normal, Material);
+                    return new HitRecord(t, p, normal, Material, this);
                 }
             }
             return null;
