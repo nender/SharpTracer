@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace RayTracer
 {
+    [System.Diagnostics.DebuggerDisplay("{ToString()}")]
     struct Vec3 : IEnumerable<double>
     {
         public Vec3(double x, double y, double z) {
@@ -80,5 +81,8 @@ namespace RayTracer
             yield return Y;
             yield return Z;
         }
+
+        new public string ToString()
+            => $"<{Math.Round(X, 4)} {Math.Round(Y, 4)} {Math.Round(Z, 4)}>";
     }
 }
